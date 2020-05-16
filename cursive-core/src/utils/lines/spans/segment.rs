@@ -21,7 +21,21 @@ impl Segment {
         let span = &source.spans_raw()[self.span_id];
 
         let content = span.content.resolve(source.source());
-        let content = &content[self.start..self.end];
+
+        // This behaviour is unsafe and may cause untreatable panics
+        // let content = &content[self.start..self.end];
+
+        let mut begin: usize = self.start;
+        let mut end: usize = self.end;
+        // Only continue when it is proven that the operation will not panic
+        // We step after the cut into the multibyte character occurs
+        while !content.is_char_boundary(begin) && begin < content.len() {
+            begin += 1
+        }
+        while !content.is_char_boundary(end) && end < content.len() {
+            end += 1
+        }
+        let content = &content[begin..end];
 
         Span {
             content,
